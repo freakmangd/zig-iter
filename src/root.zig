@@ -30,10 +30,7 @@ fn Repeat(comptime T: type) type {
             return self.value;
         }
 
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+        pub usingnamespace Iter(@This());
     };
 }
 
@@ -65,10 +62,7 @@ fn Once(comptime T: type) type {
             return self.value;
         }
 
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+        pub usingnamespace Iter(@This());
     };
 }
 
@@ -105,15 +99,12 @@ fn Skip(comptime T: type) type {
             return self.wrapped.next();
         }
 
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+        pub usingnamespace Iter(@This());
     };
 }
 
 test Skip {
-    var iter = from([_]i32{ 1, 2, 3, 4, 5 }).then().skip(2);
+    var iter = from([_]i32{ 1, 2, 3, 4, 5 }).skip(2);
     try std.testing.expectEqual(3, iter.next());
     try std.testing.expectEqual(4, iter.next());
     try std.testing.expectEqual(5, iter.next());
@@ -138,15 +129,12 @@ fn Take(comptime T: type) type {
             }
             return null;
         }
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+        pub usingnamespace Iter(@This());
     };
 }
 
 test Take {
-    var iter = from([_]i32{ 1, 2, 3, 4, 5 }).then().take(2);
+    var iter = from([_]i32{ 1, 2, 3, 4, 5 }).take(2);
     try std.testing.expectEqual(1, iter.next());
     try std.testing.expectEqual(2, iter.next());
     try std.testing.expectEqual(null, iter.next());
@@ -171,15 +159,12 @@ fn Zip(comptime T: type, comptime W: type) type {
             return null;
         }
 
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+        pub usingnamespace Iter(@This());
     };
 }
 
 test Zip {
-    var iter = from([_]i32{ 1, 2, 3 }).then().zip(repeat(@as(i32, 4)));
+    var iter = from([_]i32{ 1, 2, 3 }).zip(repeat(@as(i32, 4)));
     try std.testing.expectEqual(.{ 1, 4 }, iter.next());
     try std.testing.expectEqual(.{ 2, 4 }, iter.next());
     try std.testing.expectEqual(.{ 3, 4 }, iter.next());
@@ -250,10 +235,8 @@ fn From(comptime T: type) type {
             }
             return null;
         }
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+
+        pub usingnamespace Iter(@This());
     };
 }
 
@@ -312,15 +295,19 @@ fn Filter(comptime T: type) type {
             }
         }
 
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+        pub usingnamespace Iter(@This());
+        //const mixin = Iter(@This());
+        //pub const skip = mixin.skip;
+        //pub const take = mixin.take;
+        //pub const map = mixin.map;
+        //pub const filter = mixin.filter;
+        //pub const zip = mixin.zip;
+        //pub const fold = mixin.fold;
     };
 }
 
 test Filter {
-    var iter = from([_]i32{ 1, 2, 3 }).then().filter(struct {
+    var iter = from([_]i32{ 1, 2, 3 }).filter(struct {
         fn func(n: i32) bool {
             return n > 1;
         }
@@ -349,15 +336,12 @@ fn Map(comptime T: type, comptime F: type) type {
             }
         }
 
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+        pub usingnamespace Iter(@This());
     };
 }
 
 test Map {
-    var iter = from([_]i32{ 1, 2, 3 }).then().map(i32, struct {
+    var iter = from([_]i32{ 1, 2, 3 }).map(i32, struct {
         fn func(n: i32) i32 {
             return n * 2;
         }
@@ -388,10 +372,7 @@ fn Function(comptime T: type) type {
             return null;
         }
 
-        //usingnamespace Iter(@This());
-        pub fn then(self: @This()) Iter(@This()) {
-            return Iter(@This()){ .value = self };
-        }
+        pub usingnamespace Iter(@This());
     };
 }
 
@@ -444,7 +425,7 @@ fn Fold(comptime T: type, comptime R: type) type {
 }
 
 test Fold {
-    const sum = from([_]i32{ 1, 2, 3 }).then().fold(i32, 0, struct {
+    const sum = from([_]i32{ 1, 2, 3 }).fold(i32, 0, struct {
         fn func(elem: i32, state: i32) i32 {
             return state + elem;
         }
@@ -456,35 +437,33 @@ test Fold {
 fn Iter(comptime T: type) type {
     // check assumptions
     return struct {
-        value: T,
-
         /// skip the first n elements of the iterator
-        pub fn skip(self: @This(), n: usize) Skip(T) {
-            return Skip(T).init(self.value, n);
+        pub fn skip(self: T, n: usize) Skip(T) {
+            return Skip(T).init(self, n);
         }
 
         /// take only the first n elements of the iterator
-        pub fn take(self: @This(), n: usize) Take(T) {
-            return Take(T).init(self.value, n);
+        pub fn take(self: T, n: usize) Take(T) {
+            return Take(T).init(self, n);
         }
 
         /// transform all elements of T into a new item
-        pub fn map(self: @This(), comptime F: type, func: *const fn (T.Elem) F) Map(T, F) {
-            return Map(T, F).init(self.value, func);
+        pub fn map(self: T, comptime F: type, func: *const fn (T.Elem) F) Map(T, F) {
+            return Map(T, F).init(self, func);
         }
 
         /// filter out any elements which don't match a predicate func
-        pub fn filter(self: @This(), func: fn (T.Elem) bool) Filter(T) {
-            return Filter(T).init(self.value, func);
+        pub fn filter(self: T, func: fn (T.Elem) bool) Filter(T) {
+            return Filter(T).init(self, func);
         }
 
         /// zip two iterators together
-        pub fn zip(self: @This(), other: anytype) Zip(T, @TypeOf(other)) {
-            return Zip(T, @TypeOf(other)).init(self.value, other);
+        pub fn zip(self: T, other: anytype) Zip(T, @TypeOf(other)) {
+            return Zip(T, @TypeOf(other)).init(self, other);
         }
 
-        pub fn fold(self: @This(), comptime R: type, init: R, func: *const fn (T.Elem, R) R) R {
-            var folder = Fold(T, R).init(self.value, init, func);
+        pub fn fold(self: T, comptime R: type, init: R, func: *const fn (T.Elem, R) R) R {
+            var folder = Fold(T, R).init(self, init, func);
             return folder.get();
         }
     };

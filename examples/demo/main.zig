@@ -20,7 +20,7 @@ pub fn main() !void {
 
     // take
     {
-        var it = iter.from([_]i32{ 1, 2, 3 }).then().take(2);
+        var it = iter.from([_]i32{ 1, 2, 3 }).take(2);
         while (it.next()) |next| {
             std.debug.print("take {d}\n", .{next});
         }
@@ -28,7 +28,7 @@ pub fn main() !void {
 
     // skip
     {
-        var it = iter.from([_]i32{ 1, 2, 3 }).then().skip(1);
+        var it = iter.from([_]i32{ 1, 2, 3 }).skip(1);
         while (it.next()) |next| {
             std.debug.print("skip {d}\n", .{next});
         }
@@ -36,7 +36,7 @@ pub fn main() !void {
 
     // repeat
     {
-        var it = iter.repeat(@as(i32, 1)).then().take(2);
+        var it = iter.repeat(@as(i32, 1)).take(2);
         while (it.next()) |next| {
             std.debug.print("repeat {d}\n", .{next});
         }
@@ -44,7 +44,7 @@ pub fn main() !void {
 
     // filter
     {
-        var it = iter.from([_]i32{ 1, 2, 3 }).then().filter(struct {
+        var it = iter.from([_]i32{ 1, 2, 3 }).filter(struct {
             fn func(n: i32) bool {
                 return n > 3;
             }
@@ -56,7 +56,7 @@ pub fn main() !void {
 
     // map
     {
-        var it = iter.from([_]i32{ 1, 2, 3 }).then().map(i32, struct {
+        var it = iter.from([_]i32{ 1, 2, 3 }).map(i32, struct {
             fn func(n: i32) i32 {
                 return n * 2;
             }
@@ -68,7 +68,7 @@ pub fn main() !void {
 
     // zip
     {
-        var it = iter.from([_]i32{ 1, 2, 3 }).then().zip(iter.from([_]i32{ 4, 5 }));
+        var it = iter.from([_]i32{ 1, 2, 3 }).zip(iter.from([_]i32{ 4, 5 }));
         while (it.next()) |next| {
             std.debug.print("zip {any}\n", .{next});
         }
@@ -76,7 +76,7 @@ pub fn main() !void {
 
     // fold
     {
-        const sum = iter.from([_]i32{ 1, 2, 3 }).then().fold(i32, 0, struct {
+        const sum = iter.from([_]i32{ 1, 2, 3 }).fold(i32, 0, struct {
             fn func(elem: i32, state: i32) i32 {
                 return state + elem;
             }
@@ -110,9 +110,9 @@ pub fn main() !void {
             }
         }.func;
         var it = iter.from([_]i32{ 1, 2, 3 })
-            .then().map(i32, timesTwo)
-            .then().filter(even)
-            .then().take(1);
+            .map(i32, timesTwo)
+            .filter(even)
+            .take(1);
         while (it.next()) |next| {
             std.debug.print("combo {d}\n", .{next});
         }
